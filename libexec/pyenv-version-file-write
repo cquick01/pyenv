@@ -1,8 +1,17 @@
 #!/usr/bin/env bash
-# Usage: pyenv version-file-write <file> <version>
+# Usage: pyenv version-file-write [-f/--force] <file> <version>
 
 set -e
 [ -n "$PYENV_DEBUG" ] && set -x
+
+force=false
+for args in "$@"
+do
+  if [ "$args" = "-f" ] || [ "$args" = "--force" ]; then
+    force=true
+    shift
+  fi
+done
 
 PYENV_VERSION_FILE="$1"
 shift || true
@@ -14,7 +23,7 @@ if [ -z "$versions" ] || [ -z "$PYENV_VERSION_FILE" ]; then
 fi
 
 # Make sure the specified version is installed.
-pyenv-prefix "${versions[@]}" >/dev/null
+pyenv-prefix "${versions[@]}" || $force >/dev/null
 
 # Write the version out to disk.
 # Create an empty file. Using "rm" might cause a permission error.

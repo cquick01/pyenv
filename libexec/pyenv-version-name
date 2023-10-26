@@ -28,17 +28,19 @@ version_exists() {
 versions=()
 OLDIFS="$IFS"
 { IFS=:
-  any_not_installed=0
+  any_installed=0
   for version in ${PYENV_VERSION}; do
     if version_exists "$version" || [ "$version" = "system" ]; then
       versions=("${versions[@]}" "${version}")
+      any_installed=1
     elif version_exists "${version#python-}"; then
       versions=("${versions[@]}" "${version#python-}")
+      any_installed=1
     elif resolved_version="$(pyenv-latest -q "$version")"; then
       versions=("${versions[@]}" "${resolved_version}")
+      any_installed=1
     else
       echo "pyenv: version \`$version' is not installed (set by $(pyenv-version-origin))" >&2
-      any_not_installed=1
     fi
   done
 }
@@ -50,6 +52,6 @@ OLDIFS="$IFS"
 }
 IFS="$OLDIFS"
 
-if [ "$any_not_installed" = 1 ]; then
+if [ "$any_installed" = 0 ]; then
   exit 1
 fi

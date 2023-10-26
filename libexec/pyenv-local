@@ -2,7 +2,7 @@
 #
 # Summary: Set or show the local application-specific Python version(s)
 #
-# Usage: pyenv local <version> <version2> <..>
+# Usage: pyenv local [-f/--force] <version> <version2> <..>
 #        pyenv local --unset
 #
 # Sets the local application-specific Python version(s) by writing the
@@ -20,6 +20,9 @@
 # your default system Python.  Run `pyenv versions' for a list of
 # available Python versions.
 #
+# -f/--force can be used to write the specified versions to the
+# `.python-version` file, even if not all interpreters are available.
+#
 # Example: To enable the python2.7 and python3.7 shims to find their
 #          respective executables you could set both versions with:
 #
@@ -32,16 +35,31 @@ set -e
 # Provide pyenv completions
 if [ "$1" = "--complete" ]; then
   echo --unset
+  echo -f
+  echo --force
   echo system
   exec pyenv-versions --bare
 fi
+
+force=false
+for args in "$@"
+do
+  if [ "$args" = "-f" ] || [ "$args" = "--force" ]; then
+    force=true
+    shift
+  fi
+done
 
 versions=("$@")
 
 if [ "$versions" = "--unset" ]; then
   rm -f .python-version
 elif [ -n "$versions" ]; then
-  pyenv-version-file-write .python-version "${versions[@]}"
+  if $force; then
+    pyenv-version-file-write --force .python-version "${versions[@]}"
+  else
+    pyenv-version-file-write .python-version "${versions[@]}"
+  fi
 else
   if version_file="$(pyenv-version-file "$PWD")"; then
     IFS=: versions=($(pyenv-version-file-read "$version_file"))
